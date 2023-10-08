@@ -2,13 +2,13 @@
 
 Notes on deploying a single site [WordPress FPM Edition](https://hub.docker.com/_/wordpress/) instance as a docker deployment orchestrated by Docker Compose.
 
-- Use the FPM version of WordPress (v5-fpm)
+- Use the FPM version of WordPress (6.3.1-fpm)
 - Use MySQL as the database (v8)
-- Use Nginx as the web server (v1)
+- Use Nginx as the web server (v1.25)
 - Use Adminer as the database management tool (v4)
 - Include self-signed SSL certificate ([Let's Encrypt localhost](https://letsencrypt.org/docs/certificates-for-localhost/) format)
 
-**DISCLAIMER: The code herein may not be up to date nor compliant with the most recent package and/or security notices. The frequency at which this code is reviewed and updated is based solely on the lifecycle of the project for which it was written to support, and is not actively maintained outside of that scope. Use at your own risk.**
+**DISCLAIMER: The code herein may not be up to date nor compliant with the most recent package and/or security notices. The frequency at which this code is reviewed and updated is based solely on the project lifecycle for which it was written to support, and is not actively maintained outside of that scope. You can use it at your own risk.**
 
 ## Table of contents
 
@@ -28,23 +28,22 @@ Notes on deploying a single site [WordPress FPM Edition](https://hub.docker.com/
 
 ## <a name="overview"></a>Overview
 
-WordPress is a free and open source blogging tool and a content management system (CMS) based on PHP and MySQL, which runs on a web hosting service. Features include a plugin architecture and a template system.
+WordPress is a free and open-source blogging tool and a content management system (CMS) based on PHP and MySQL, which runs on a web hosting service. Features include a plugin architecture and a template system.
 
 This variant contains PHP-FPM, which is a FastCGI implementation for PHP. 
 
 - See the [PHP-FPM website](https://php-fpm.org/) for more information about PHP-FPM.
-- In order to use this image variant, some kind of reverse proxy (such as NGINX, Apache, or other tool which speaks the FastCGI protocol) will be required.
+- In order to use this image variant, some kind of reverse proxy (such as NGINX, Apache, or other tools that speak the FastCGI protocol) will be required.
 
 ### <a name="reqts"></a>Host requirements
 
-Both Docker and Docker Compose are required on the host to run this code
+**A Docker Desktop is required on the host to run this code**
 
-- Install Docker Engine: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
-- Install Docker Compose: [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
+- Install Docker Desktop: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
 
 ## <a name="config"></a>Configuration
 
-Copy the `env.template` file as `.env` and populate according to your environment
+Copy the `env.template` file as `.env` and populate it according to your environment
 
 ```ini
 # docker-compose environment file
@@ -56,7 +55,7 @@ Copy the `env.template` file as `.env` and populate according to your environmen
 #  2. Shell environment variables
 #  3. Environment file
 #  4. Dockerfile
-#  5. Variable is not defined
+#  5. The variable is not defined
 
 # Wordpress Settings
 export WORDPRESS_LOCAL_HOME=./wordpress
@@ -91,7 +90,7 @@ export NGINX_LOGS=./logs/nginx
 # TBD
 ```
 
-Don't modify `templates/default.conf.template` instead just set NGINX_HOST in `docker-compose.yml` file
+Don't modify `templates/default.conf.template` for hostname change instead, just set NGINX_HOST in the `docker-compose.yml` file
 
 ```conf
 # default.conf
@@ -183,76 +182,32 @@ Included `uploads.ini` file allows for **Maximum upload file size: 75 MB**
 
 ## <a name="deploy"></a>Deploy
 
-Once configured the containers can be brought up using Docker Compose
-
-1. Set the environment variables and pull the images
+Once configured the containers can be brought up using Docker Compose, [more-info](https://docs.docker.com/compose/reference/)
 
     ```console
-    source .env
-    docker-compose pull
+    docker compose up -d
     ```
 
-2. Bring up the Database and allow it a moment to create the WordPress user and database tables
-
-    ```console
-    docker-compose up -d database
-    ```
-    
-    You will know it's ready when you see something like this in the docker logs
-    
-    ```console
-    $ docker-compose logs database
-    wp-database  | 2022-01-28 13:40:18+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.28-1debian10 started.
-    wp-database  | 2022-01-28 13:40:18+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
-    wp-database  | 2022-01-28 13:40:18+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.28-1debian10 started.
-    wp-database  | 2022-01-28 13:40:18+00:00 [Note] [Entrypoint]: Initializing database files
-    ...
-    wp-database  | 2022-01-28 13:40:28+00:00 [Note] [Entrypoint]: Creating database wordpress
-    wp-database  | 2022-01-28 13:40:28+00:00 [Note] [Entrypoint]: Creating user wordpress
-    wp-database  | 2022-01-28 13:40:28+00:00 [Note] [Entrypoint]: Giving user wordpress access to schema wordpress
-    wp-database  |
-    wp-database  | 2022-01-28 13:40:28+00:00 [Note] [Entrypoint]: Stopping temporary server
-    wp-database  | 2022-01-28T13:40:29.002886Z 13 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.28).
-    wp-database  | 2022-01-28T13:40:30.226306Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete (mysqld 8.0.28)  MySQL Community Server - GPL.
-    wp-database  | 2022-01-28 13:40:31+00:00 [Note] [Entrypoint]: Temporary server stopped
-    wp-database  |
-    wp-database  | 2022-01-28 13:40:31+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
-    wp-database  |
-    ...
-    wp-database  | 2022-01-28T13:40:32.061642Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
-    wp-database  | 2022-01-28T13:40:32.061790Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.28'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
-    ```
-
-3. Bring up the WordPress and Nginx containers
-
-    ```console
-    docker-compose up -d wordpress nginx
-    ```
-    
-    After a few moments the containers should be observed as running
-    
-    ```console
-    $ docker-compose ps
-    NAME                COMMAND                  SERVICE             STATUS              PORTS
-    wp-database         "docker-entrypoint.s…"   database            running             33060/tcp
-    wp-nginx            "/docker-entrypoint.…"   nginx               running             0.0.0.0:8080->80/tcp, 0.0.0.0:8443->443/tcp
-    wp-wordpress        "docker-entrypoint.s…"   wordpress           running             9000/tcp
-    ```
-
-The WordPress application can be reached at the designated host and port (e.g. [https://127.0.0.1:8443]()).
+The WordPress application can be reached at the designated host and port (e.g. [https://wpdocker.local/]()).
 
 - **NOTE**: you will likely have to acknowledge the security risk if using the included self-signed certificate.
 
 ![](./imgs/WP-first-run.png) 
 
-Complete the initial WordPress installation process, and when completed you should see something similar to this.
+Complete the initial WordPress installation process, and when completed you should see something similar to this as per the WP version.
 
 ![](./imgs/WP-dashboard.png)
 ![](./imgs/WP-view-site.png)
 
+## <a name="deploy"></a>Stops containers and removes containers, networks, volumes, and images created by `up`.
+
+```console
+    docker compose down
+```
+
 ## <a name="adminer"></a>Adminer
 
-An Adminer configuration has been included in the `docker-compose.yml` definition file, but commented out. Since it bypasses Nginx it is recommended to only use Adminer as needed, and to not let it run continuously.
+An Adminer configuration has been included in the `docker-compose.yml` definition file but commented out. Since it bypasses Nginx it is recommended to only use Adminer as needed and not let it run continuously.
 
 Expose Adminer by uncommenting the `adminer` section of the `docker-compose.yml` file
 
@@ -273,20 +228,17 @@ Expose Adminer by uncommenting the `adminer` section of the `docker-compose.yml`
 ...
 ```
 
-And run the `adminer` container
+Pull down all the docker containers and run them again to get the `adminer` container up and running
 
 ```console
-$ docker-compose up -d adminer
-[+] Running 2/2
- ⠿ Container wp-database  Running                                                                                                      0.0s
- ⠿ Container wp-adminer   Started                                                                                                      0.9s
+    docker compose down
+    docker compose up -d
 ```
-
-Since Adminer is bypassing our Nginx configuration it will be running over HTTP in plain text on port 9000 (e.g. [http://127.0.0.1:9000/]())
+Since Adminer is bypassing our Nginx configuration it will be running over HTTP in plain text on port 9000 (e.g. [http://wpdocker.local:9000/]())
 
 ![](./imgs/WP-adminer.png)
 
-Enter the connection information for your Database and you should see something similar to image below.
+Enter the connection information for your Database and you should see something similar to the image below.
 
 Example connection information:
 
