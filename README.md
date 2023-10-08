@@ -231,7 +231,7 @@ Pull down all the docker containers and run them again to get the `adminer` cont
     docker compose down
     docker compose up -d
 ```
-Since Adminer is bypassing our Nginx configuration it will be running over HTTP in plain text on port 9000 (e.g. [http://wpdocker.local:9000/]())
+Since Adminer is bypassing our Nginx configuration it will be running over HTTP in plain text on port 9000 (e.g. [http://wpdocker.local:9000/]()), and yes adminer will be accessed only on http protocol and not https
 
 ![](./imgs/WP-adminer.png)
 
