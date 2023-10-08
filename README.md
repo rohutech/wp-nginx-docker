@@ -65,7 +65,7 @@ export WORDPRESS_DB_HOST=database:3306
 export WORDPRESS_DB_NAME=wordpress
 export WORDPRESS_DB_USER=wordpress
 export WORDPRESS_DB_PASSWORD=password123!
-export WORDPRESS_HOST=wpdocker.local
+export WORDPRESS_HOST=wpdocker.local # put this entry in your host file as 127.0.0.1 wpdocker.local
 export WP_HOME=${WORDPRESS_HOST}
 export WP_SITEURL=${WORDPRESS_HOST}
 export WORDPRESS_DEBUG=true
@@ -392,4 +392,10 @@ For the `wordpress` stanza, add
 ```
     ports:
       - "9000:9000"
+```
+
+Add below to your host file to access the WP setup on wpdocker.local
+
+```
+    127.0.0.1 wpdocker.local
 ```
