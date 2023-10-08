@@ -184,9 +184,7 @@ Included `uploads.ini` file allows for **Maximum upload file size: 75 MB**
 
 Once configured the containers can be brought up using Docker Compose, [more-info](https://docs.docker.com/compose/reference/)
 
-    ```console
     docker compose up -d
-    ```
 
 The WordPress application can be reached at the designated host and port (e.g. [https://wpdocker.local/]()).
 
