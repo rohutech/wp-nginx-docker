@@ -12,14 +12,19 @@ Notes on deploying a single site [WordPress FPM Edition](https://hub.docker.com/
 
 ## Table of contents
 
-- [Overview](#overview)
-    - [Host requirements](#reqts)
-- [Configuration](#config)
-- [Deploy](#deploy)
-- [Adminer](#adminer)
-- [Teardown](#teardown)
-- [References](#references)
-- [Notes](#notes)
+- [WordPress (FPM Edition) - Docker](#wordpress-fpm-edition---docker)
+  - [Table of contents](#table-of-contents)
+  - [Overview](#overview)
+    - [Host requirements](#host-requirements)
+  - [Configuration](#configuration)
+  - [Deploy](#deploy)
+  - [Adminer](#adminer)
+  - [Teardown](#teardown)
+  - [References](#references)
+  - [Notes](#notes)
+    - [Let's Encrypt SSL Certificate](#lets-encrypt-ssl-certificate)
+    - [Error establishing database connection](#error-establishing-database-connection)
+    - [Port Mapping](#port-mapping)
 
 ## <a name="overview"></a>Overview
 
@@ -60,24 +65,33 @@ export WORDPRESS_DB_HOST=database:3306
 export WORDPRESS_DB_NAME=wordpress
 export WORDPRESS_DB_USER=wordpress
 export WORDPRESS_DB_PASSWORD=password123!
+export WORDPRESS_HOST=wpdocker.local
+export WP_HOME=${WORDPRESS_HOST}
+export WP_SITEURL=${WORDPRESS_HOST}
+export WORDPRESS_DEBUG=true
 
 # MySQL Settings
 export MYSQL_LOCAL_HOME=./dbdata
+export MYSQL_DATABASE_DUMP=./dbdump
 export MYSQL_DATABASE=${WORDPRESS_DB_NAME}
 export MYSQL_USER=${WORDPRESS_DB_USER}
 export MYSQL_PASSWORD=${WORDPRESS_DB_PASSWORD}
+export MYSQL_ROOT_USER=root
 export MYSQL_ROOT_PASSWORD=rootpassword123!
 
 # Nginx Settings
-export NGINX_CONF=./nginx/default.conf
+export NGINX_TEMPLATE=./templates
 export NGINX_SSL_CERTS=./ssl
 export NGINX_LOGS=./logs/nginx
+
+# Docker settings
+# export DOCKER_DEFAULT_PLATFORM=linux/arm64/v8
 
 # User Settings
 # TBD
 ```
 
-Modify `nginx/default.conf` and replace `$host` and `8443` with your **Domain Name** and exposed **HTTPS Port** throughout the file
+Don't modify `templates/default.conf.template` instead just set NGINX_HOST in `docker-compose.yml` file
 
 ```conf
 # default.conf
@@ -85,29 +99,29 @@ Modify `nginx/default.conf` and replace `$host` and `8443` with your **Domain Na
 server {
     listen 80;
     listen [::]:80;
-    server_name $host;
+    server_name ${NGINX_HOST};
     location / {
         # update port as needed for host mapped https
-        rewrite ^ https://$host:8443$request_uri? permanent;
+        rewrite ^ https://${NGINX_HOST}$request_uri? permanent;
     }
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name $host;
+    server_name ${NGINX_HOST};
     index index.php index.html index.htm;
     root /var/www/html;
     server_tokens off;
     client_max_body_size 75M;
 
     # update ssl files as required by your deployment
-    ssl_certificate /etc/ssl/fullchain.pem;
+    ssl_certificate     /etc/ssl/fullchain.pem;
     ssl_certificate_key /etc/ssl/privkey.pem;
 
     # logging
     access_log /var/log/nginx/wordpress.access.log;
-    error_log /var/log/nginx/wordpress.error.log;
+    error_log  /var/log/nginx/wordpress.error.log;
 
     # some security headers ( optional )
     add_header X-Frame-Options "SAMEORIGIN" always;
