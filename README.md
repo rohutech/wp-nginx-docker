@@ -197,8 +197,8 @@ Complete the initial WordPress installation process, and when completed you shou
 ![](./imgs/WP-dashboard.png)
 ![](./imgs/WP-view-site.png)
 
-## <a name="deploy"></a>Stops containers and removes containers, networks, volumes, and images created by `up`.
-
+**## <a name="deploy"></a>Stops containers and removes containers, networks, volumes, and images created by `up`.
+**
 ```console
     docker compose down
 ```
